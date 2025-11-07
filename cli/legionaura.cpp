@@ -46,15 +46,17 @@ static void usage(const char* prog){
 int main(int argc, char** argv){
     if (argc < 2){ usage(argv[0]); return 1; }
 
-    // Help flags
-    if (cmd == "-h" || cmd == "--help") {
-        usage(argv[0]);
-        return 0;
-    }
+
 
 
     std::string cmd = argv[1];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
+
+        // Help flags
+    if (cmd == "-h" || cmd == "--help") {
+        usage(argv[0]);
+        return 0;
+    }
 
     uint8_t speed = 1, brightness = 1;
     LAWaveDir wdir = LAWaveDir::None;

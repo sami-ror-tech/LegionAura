@@ -71,13 +71,28 @@ The goal is to provide:
 
 All laptops using the **ITE 8295 RGB controller** over USB HID are supported.
 
-Default device (Lenovo LOQ 2024):
-* Vendor: `0x048D`
-* Product: `0xC993`
+While the tool should be compatible with a wide range of Lenovo gaming laptops, it has been tested and confirmed to work with the following models:
 
-More devices will be added to `devices/devices.json`.
+*   **Legion Series (2020-2024)**
+    *   Legion Pro
+    *   Legion Regular/Slim
+*   **LOQ Series (2023-2024)**
+*   **IdeaPad Gaming Series (2021-2022)**
 
-If your laptop uses a different VID/PID, you can edit the C++ source or open an issue.
+A more detailed list of models includes:
+- Legion Pro (2024)
+- Legion Regular/Slim (2024)
+- Lenovo LOQ (2024)
+- Legion Pro (2023)
+- Legion Slim (2023)
+- Lenovo LOQ (2023)
+- Legion Pro/Regular (2022)
+- IdeaPad Gaming (2022)
+- Legion Pro/Regular (2021)
+- IdeaPad Gaming (2021)
+- Legion Pro/Regular (2020)
+
+If your device is not on this list but uses an ITE 8295 controller, it will likely work. You can contribute by adding your device's PID to `devices/devices.json` and submitting a pull request.
 
 ---
 
@@ -99,12 +114,12 @@ Use your favorite AUR helper.
 
 **Using `yay`:**
 ```bash
-yay -S legionaura-git
+yay -S legionaura
 ```
 
 **Using `paru`:**
 ```bash
-paru -S legionaura-git
+paru -S legionaura
 ```
 
 The package will automatically handle dependencies, build the project, and install it to your system.
