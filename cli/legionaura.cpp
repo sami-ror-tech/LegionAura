@@ -5,6 +5,11 @@
 #include <cctype>
 #include "legionaura.h"
 
+#ifndef LEGIONAURA_VERSION
+#define LEGIONAURA_VERSION "unknown"
+#endif
+
+
 // ------------------------------------------------------
 // Normalize colors (1->4, 2->4, 3->4, >4->trim)
 // ------------------------------------------------------
@@ -57,6 +62,13 @@ int main(int argc, char** argv){
         usage(argv[0]);
         return 0;
     }
+
+    // Version flags
+    if (cmd == "-v" || cmd == "--version") {
+        std::cout << "LegionAura " << LEGIONAURA_VERSION << "\n";
+        return 0;
+    }
+
 
     uint8_t speed = 1, brightness = 1;
     LAWaveDir wdir = LAWaveDir::None;
