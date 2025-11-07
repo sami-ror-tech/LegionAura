@@ -5,6 +5,8 @@
 #include <cctype>
 #include "legionaura.h"
 
+// Nivedck -- @2025
+
 #ifndef LEGIONAURA_VERSION
 #define LEGIONAURA_VERSION "unknown"
 #endif
