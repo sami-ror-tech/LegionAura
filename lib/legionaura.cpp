@@ -1,9 +1,10 @@
-#include "legionaura.h"
+
 #include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include "legionaura.h"
 
 static uint8_t clampByte(int v){ return (uint8_t)std::max(0,std::min(255,v)); }
 
@@ -80,42 +81,40 @@ LegionAura::loadSupportedDevices(const std::string& path)
 }
 
 bool LegionAura::autoDetect() {
-    if (libusb_init(&ctx_) != 0)
-        return false;
-
-    auto devices = loadSupportedDevices("devices/devices.json");
-    if (devices.empty())
-        return false;
-
-    for (auto& vp : devices)
-    {
-        uint16_t vid = vp.first;
-        uint16_t pid = vp.second;
-
-        libusb_device_handle* handle =
-            libusb_open_device_with_vid_pid(ctx_, vid, pid);
-
-        if (handle)
-        {
-            vid_ = vid;
-            pid_ = pid;
-            dev_ = handle;
-
-            if (libusb_kernel_driver_active(dev_, iface_) == 1)
-                libusb_detach_kernel_driver(dev_, iface_);
-
-            if (libusb_claim_interface(dev_, iface_) == 0)
-                return true;
-
-            libusb_close(dev_);
-            dev_ = nullptr;
-        }
+    bool createdCtx = false;
+    if (!ctx_) {
+        if (libusb_init(&ctx_) != 0) return false;
+        createdCtx = true;
     }
 
-    libusb_exit(ctx_);
-    ctx_ = nullptr;
+    auto devices = loadSupportedDevices("devices/devices.json");
+    if (devices.empty()) {
+        if (createdCtx) { libusb_exit(ctx_); ctx_ = nullptr; }
+        return false;
+    }
+
+    for (auto& vp : devices) {
+        uint16_t vid = vp.first, pid = vp.second;
+        libusb_device_handle* h = libusb_open_device_with_vid_pid(ctx_, vid, pid);
+        if (!h) continue;
+
+        // Try to prepare the interface
+        if (libusb_kernel_driver_active(h, iface_) == 1)
+            libusb_detach_kernel_driver(h, iface_);
+
+        if (libusb_claim_interface(h, iface_) == 0) {
+            // success: adopt this handle
+            vid_ = vid; pid_ = pid; dev_ = h;
+            return true;
+        }
+
+        libusb_close(h);
+    }
+
+    if (createdCtx) { libusb_exit(ctx_); ctx_ = nullptr; }
     return false;
 }
+
 
 // --------------------------------------------------------------
 
@@ -134,13 +133,25 @@ bool LegionAura::setBrightnessOnly(uint8_t level)
 {
     LAParams cur;
 
-    // Read current state
-    if (!readState(cur)) {
-        return false;
-    }
+    // // Read current state
+    // if (!readState(cur)) {
+    //     return false;
+    // }
 
-    // Modify only brightness
+    // // Modify only brightness
+    // cur.brightness = std::max<uint8_t>(1, std::min<uint8_t>(2, level));
+
+    cur.effect = LAEffect::Static;
+    cur.speed = 1;
     cur.brightness = std::max<uint8_t>(1, std::min<uint8_t>(2, level));
+    cur.zones = {
+        LAColor{255,255,255},
+        LAColor{255,255,255},
+        LAColor{255,255,255},
+        LAColor{255,255,255}
+    };
+    cur.waveDir = LAWaveDir::None;
+
 
     // Re-apply full packet
     return apply(cur);
@@ -149,41 +160,46 @@ bool LegionAura::setBrightnessOnly(uint8_t level)
 
 
 std::vector<uint8_t> LegionAura::buildPayload(const LAParams& p) {
+    LAEffect eff = p.effect;
+    // Only valid effects should be sent. If LAEffect::None leaks in,
+    // reuse Static as a safe default (we never call buildPayload with None from CLI flow).
+    if (!(eff == LAEffect::Static || eff == LAEffect::Breath ||
+          eff == LAEffect::Wave   || eff == LAEffect::Hue)) {
+        eff = LAEffect::Static;
+    }
+
+    uint8_t speed = std::max<uint8_t>(1, std::min<uint8_t>(4, p.speed));
+    uint8_t bright = std::max<uint8_t>(1, std::min<uint8_t>(2, p.brightness));
+
     std::vector<uint8_t> d;
     d.reserve(32);
-
     d.push_back(0xCC);
     d.push_back(0x16);
-    d.push_back(static_cast<uint8_t>(p.effect));
-    d.push_back(p.speed);
-    d.push_back(p.brightness);
+    d.push_back(static_cast<uint8_t>(eff));
+    d.push_back(speed);
+    d.push_back(bright);
 
-    bool needsColors = (p.effect == LAEffect::Static || p.effect == LAEffect::Breath);
-
+    bool needsColors = (eff == LAEffect::Static || eff == LAEffect::Breath);
     if (needsColors) {
-        for (auto& z : p.zones) {
-            d.push_back(z.r);
-            d.push_back(z.g);
-            d.push_back(z.b);
-        }
+        for (auto& z : p.zones) { d.push_back(z.r); d.push_back(z.g); d.push_back(z.b); }
     } else {
         d.insert(d.end(), 12, 0x00);
     }
 
-    d.push_back(0x00);
+    d.push_back(0x00); // unused
+
     uint8_t rtl=0, ltr=0;
-    if (p.effect == LAEffect::Wave) {
+    if (eff == LAEffect::Wave) {
         if (p.waveDir == LAWaveDir::RTL) rtl = 1;
-        if (p.waveDir == LAWaveDir::LTR) ltr = 1;
+        else if (p.waveDir == LAWaveDir::LTR) ltr = 1;
     }
     d.push_back(rtl);
     d.push_back(ltr);
 
-    if (d.size() < 32)
-        d.insert(d.end(), 32 - d.size(), 0x00);
-
+    if (d.size() < 32) d.insert(d.end(), 32 - d.size(), 0x00);
     return d;
 }
+
 
 bool LegionAura::ctrlSendCC(const std::vector<uint8_t>& data) {
     if (!dev_) return false;
@@ -206,55 +222,43 @@ bool LegionAura::readState(LAParams& out)
 {
     if (!dev_) return false;
 
-    // 64-byte buffer to read the feature report
     std::vector<uint8_t> buf(64);
-
-    // libusb HID GET_REPORT
-    // bmRequestType: 0xA1 (device→host, class, interface)
-    // bRequest: 0x01 = GET_REPORT
-    // wValue: 0x03CC = (FEATURE << 8) | ReportID(0xCC)
     int r = libusb_control_transfer(
-        dev_,
-        0xA1,
-        0x01,
-        0x03CC,
-        0x0000,
-        buf.data(),
-        buf.size(),
-        1000
+        dev_, 0xA1, 0x01, 0x03CC, 0x0000,
+        buf.data(), (uint16_t)buf.size(), 1000
     );
+    if (r < 20) return false; // need at least up to direction bytes
 
-    if (r < 5) return false;
-
-    // Parse
     out.effect     = static_cast<LAEffect>(buf[2]);
     out.speed      = buf[3];
     out.brightness = buf[4];
 
-    // Colors (only for static/breath)
     if (out.effect == LAEffect::Static || out.effect == LAEffect::Breath) {
+        // need 5..(5+12-1) available
+        if (r < 17) return false;
         for (int i = 0; i < 4; i++) {
-            out.zones[i].r = buf[5 + i*3 + 0];
-            out.zones[i].g = buf[5 + i*3 + 1];
-            out.zones[i].b = buf[5 + i*3 + 2];
+            out.zones[i].r = buf[5  + i*3 + 0];
+            out.zones[i].g = buf[5  + i*3 + 1];
+            out.zones[i].b = buf[5  + i*3 + 2];
         }
     } else {
         for (auto& z : out.zones) z = LAColor{0,0,0};
     }
 
-    // Wave direction (for wave)
     if (out.effect == LAEffect::Wave) {
-        uint8_t rtl = buf[18];
-        uint8_t ltr = buf[19];
-        if (rtl) out.waveDir = LAWaveDir::RTL;
-        else if (ltr) out.waveDir = LAWaveDir::LTR;
-        else out.waveDir = LAWaveDir::None;
+        uint8_t rtl = buf[18], ltr = buf[19];
+        out.waveDir = rtl ? LAWaveDir::RTL : (ltr ? LAWaveDir::LTR : LAWaveDir::None);
     } else {
         out.waveDir = LAWaveDir::None;
     }
 
+    // Clamp
+    if (out.speed < 1 || out.speed > 4) out.speed = 1;
+    if (out.brightness < 1 || out.brightness > 2) out.brightness = 1;
+
     return true;
 }
+
 
 
 std::optional<LAColor> LegionAura::parseHexRGB(const std::string& s) {

@@ -9,9 +9,11 @@
 
 struct LAColor { uint8_t r, g, b; };
 
-bool autoDetect();   // Try to detect any supported device from devices.json
-static std::vector<std::pair<uint16_t,uint16_t>> loadSupportedDevices(const std::string& path);
-bool setBrightnessOnly(uint8_t level);
+
+// This will confuse the linker
+// bool autoDetect();   // Try to detect any supported device from devices.json
+// static std::vector<std::pair<uint16_t,uint16_t>> loadSupportedDevices(const std::string& path);
+// bool setBrightnessOnly(uint8_t level);
 
 
 enum class LAEffect : uint8_t {
@@ -34,26 +36,25 @@ struct LAParams {
     LAWaveDir waveDir;
 };
 
+
 class LegionAura {
 public:
     LegionAura(uint16_t vid = 0x048D, uint16_t pid = 0xC993);
     ~LegionAura();
 
     bool open();
-    bool autoDetect();   // NEW
+    bool autoDetect();   // loads VID/PIDs from devices/devices.json and opens first match
     void close();
+
     bool apply(const LAParams& p);
     bool off();
 
-    static std::optional<LAColor> parseHexRGB(const std::string& hex);
+    bool setBrightnessOnly(uint8_t level); // change only brightness, keep current mode/colors
+    bool readState(LAParams& out);         // read current device state (effect/speed/brightness/colors)
 
-    // NEW: Load VID/PID pairs from JSON
+    static std::optional<LAColor> parseHexRGB(const std::string& hex); // "RRGGBB"
     static std::vector<std::pair<uint16_t,uint16_t>>
     loadSupportedDevices(const std::string& path);
-    bool setBrightnessOnly(uint8_t level);
-    bool readState(LAParams& out);
-
-
 
 private:
     std::vector<uint8_t> buildPayload(const LAParams& p);
@@ -64,4 +65,3 @@ private:
     libusb_device_handle* dev_ = nullptr;
     int iface_ = 0;
 };
-
