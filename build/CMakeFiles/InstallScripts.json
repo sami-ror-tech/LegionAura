@@ -1,9 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/nivedck/LegionAura/build/cmake_install.cmake",
-		"/home/nivedck/LegionAura/build/lib/cmake_install.cmake",
-		"/home/nivedck/LegionAura/build/cli/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

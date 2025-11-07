@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/legionaura.dir/link.d CMakeFiles/legionaura.dir/legionaura.cpp.o -o legionaura  ../lib/liblegionaura_lib.a -lusb-1.0

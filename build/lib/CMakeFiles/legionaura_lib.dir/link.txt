@@ -1,2 +1,0 @@
-/usr/bin/ar qc liblegionaura_lib.a CMakeFiles/legionaura_lib.dir/legionaura.cpp.o
-/usr/bin/ranlib liblegionaura_lib.a
