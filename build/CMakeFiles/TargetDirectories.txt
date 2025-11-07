@@ -1,0 +1,8 @@
+/home/nivedck/LegionAura/build/CMakeFiles/edit_cache.dir
+/home/nivedck/LegionAura/build/CMakeFiles/rebuild_cache.dir
+/home/nivedck/LegionAura/build/lib/CMakeFiles/legionaura_lib.dir
+/home/nivedck/LegionAura/build/lib/CMakeFiles/edit_cache.dir
+/home/nivedck/LegionAura/build/lib/CMakeFiles/rebuild_cache.dir
+/home/nivedck/LegionAura/build/cli/CMakeFiles/legionaura.dir
+/home/nivedck/LegionAura/build/cli/CMakeFiles/edit_cache.dir
+/home/nivedck/LegionAura/build/cli/CMakeFiles/rebuild_cache.dir
