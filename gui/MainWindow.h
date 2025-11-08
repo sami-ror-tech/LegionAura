@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QPushButton>
 #include <QColor>
 #include <array>
 #include <optional>

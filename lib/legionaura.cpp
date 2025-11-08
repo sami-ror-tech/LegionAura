@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <string>
+
 #include "legionaura.h"
 
 static uint8_t clampByte(int v){ return (uint8_t)std::max(0,std::min(255,v)); }
@@ -87,7 +89,8 @@ bool LegionAura::autoDetect() {
         createdCtx = true;
     }
 
-    auto devices = loadSupportedDevices("devices/devices.json");
+    auto devices = loadSupportedDevices(std::string(PROJECT_SOURCE_DIR) + "/devices/devices.json");
+
     if (devices.empty()) {
         if (createdCtx) { libusb_exit(ctx_); ctx_ = nullptr; }
         return false;

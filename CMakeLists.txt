@@ -10,4 +10,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(lib)
 add_subdirectory(cli)
-
+add_subdirectory(gui)
