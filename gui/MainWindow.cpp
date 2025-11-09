@@ -16,7 +16,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // ----- Modern dark style -----
+    QTimer::singleShot(100, this, &MainWindow::autoDetectOnStartup);
+
+
+    //Dark UI
     qApp->setStyle(QStyleFactory::create("Fusion"));
     QPalette dark;
     dark.setColor(QPalette::Window, QColor(30,30,30));
@@ -123,6 +126,16 @@ void MainWindow::setBtnSwatch(QPushButton* btn, const QString& hex)
         QString("background-color: #%1; border: 1px solid #555;").arg(hex)
     );
 }
+
+void MainWindow::autoDetectOnStartup()  //For auto detecting the device on startup
+{
+    if (kb_.autoDetect()) {
+        deviceReady_ = true;
+        ui->lblDevice->setText("Device: connected");
+        setStatusOk("Device auto-detected");
+    }
+}
+
 
 void MainWindow::onPickZ1()
 {
