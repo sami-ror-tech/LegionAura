@@ -9,6 +9,8 @@
 #include <QSettings>
 #include <QPalette>
 #include <QStyleFactory>
+#include <QTimer>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
