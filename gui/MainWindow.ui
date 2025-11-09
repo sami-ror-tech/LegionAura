@@ -19,15 +19,23 @@
      <layout class="QHBoxLayout" name="topBar">
 
       <item>
-       <spacer name="spacerLeft">
+       <widget class="QLabel" name="lblDeviceLeft">
+        <property name="text">
+         <string>Device: (not connected)</string>
+        </property>
+       </widget>
+      </item>
+
+      <item>
+       <spacer name="spacerCenter">
         <property name="orientation"><enum>Qt::Horizontal</enum></property>
        </spacer>
       </item>
 
       <item>
-       <widget class="QLabel" name="lblDevice">
+       <widget class="QLabel" name="lblDeviceName">
         <property name="text">
-         <string>Device: (not connected)</string>
+         <string></string>
         </property>
        </widget>
       </item>
