@@ -1,3 +1,4 @@
+// /LegionAura/gui/MainWindow.cpp
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 

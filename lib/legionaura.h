@@ -1,3 +1,4 @@
+// LegionAura/lib/legionaura.h
 #pragma once
 #include <cstdint>
 #include <array>
